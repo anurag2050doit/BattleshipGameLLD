@@ -2,8 +2,8 @@ package com.game.strategy;
 
 import com.game.entity.CoordinatePair;
 
+import java.security.SecureRandom;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 public class RandomFiringStrategy implements FiringStrategy {
@@ -11,23 +11,22 @@ public class RandomFiringStrategy implements FiringStrategy {
     final private int minX;
     final private int maxX;
     final private Set<CoordinatePair> firedCoordinates = new HashSet<>();
-    final private Random random = new Random();
+    final private SecureRandom secureRandom = new SecureRandom();
 
-
-    public RandomFiringStrategy(int firingRange, int minX, int maxS) {
+    public RandomFiringStrategy(int firingRange, int minX, int maxX) {
         this.firingRange = firingRange;
         this.minX = minX;
-        this.maxX = maxS;
+        this.maxX = maxX;
     }
 
     @Override
     public CoordinatePair fire() {
-        int x = random.nextInt(maxX-minX) + minX;
-        int y = random.nextInt(firingRange);
+        int x = secureRandom.nextInt(maxX - minX) + minX;
+        int y = secureRandom.nextInt(firingRange);
         CoordinatePair coordinatePair = new CoordinatePair(x, y);
         while (firedCoordinates.contains(coordinatePair)) {
-            x = random.nextInt(firingRange);
-            y = random.nextInt(firingRange);
+            x = secureRandom.nextInt(maxX - minX) + minX;
+            y = secureRandom.nextInt(firingRange);
             coordinatePair = new CoordinatePair(x, y);
         }
         firedCoordinates.add(coordinatePair);
