@@ -40,3 +40,8 @@ PlayerA's turn: Missile fired at (3, 0): "Miss"
 PlayerB's turn: Missile fired at (1, 1): "Miss"
 PlayerA's turn: Missile fired at (5, 3): "Hit" B-SH2 destroyed
 GameOver. PlayerA wins.
+```
+
+## Continuous Integration
+
+This project uses GitHub Actions for Continuous Integration (CI). The CI pipeline automatically builds and tests the code on every push or pull request to the `main` branch. This ensures code quality and prevents regressions.
