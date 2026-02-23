@@ -1,63 +1,79 @@
 package com.game.strategy;
 
-import com.game.entity.CoordinatePair;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-class RandomFiringStrategyTest {
-
-    private RandomFiringStrategy randomFiringStrategy;
-    private final int firingRange = 10;
-    private final int minX = 0;
-    private final int maxX = 10;
-
-    @BeforeEach
-    void setUp() {
-        randomFiringStrategy = new RandomFiringStrategy(firingRange, minX, maxX);
-    }
+public class RandomFiringStrategyTest {
 
     @Test
-    void testFireGeneratesValidCoordinates() {
-        CoordinatePair coordinate = randomFiringStrategy.fire();
-        assertTrue(coordinate.getX() >= minX && coordinate.getX() < maxX);
-        assertTrue(coordinate.getY() >= 0 && coordinate.getY() < firingRange);
-    }
+    public void testRandomFiringStrategyProducesValidCoordinates() {
+        RandomFiringStrategy strategy = new RandomFiringStrategy();
+        int battlefieldSize = 10;
 
-    @Test
-    void testFireDoesNotRepeatCoordinates() {
-        Set<CoordinatePair> firedCoordinates = new HashSet<>();
         for (int i = 0; i < 100; i++) {
-            CoordinatePair coordinate = randomFiringStrategy.fire();
-            assertFalse(firedCoordinates.contains(coordinate));
-            firedCoordinates.add(coordinate);
+            int[] target = strategy.getNextTarget(battlefieldSize);
+            assertNotNull(target, "Target should not be null");
+            assertEquals(2, target.length, "Target should have two coordinates");
+            assertTrue(target[0] >= 0 && target[0] < battlefieldSize, "X coordinate should be within bounds");
+            assertTrue(target[1] >= 0 && target[1] < battlefieldSize, "Y coordinate should be within bounds");
         }
     }
 
     @Test
-    void testSecureRandomIsUsed() {
-        // This test ensures that SecureRandom is used instead of Random.
-        // Since SecureRandom is not directly accessible, we rely on the behavior.
-        CoordinatePair firstCoordinate = randomFiringStrategy.fire();
-        CoordinatePair secondCoordinate = randomFiringStrategy.fire();
-        assertNotEquals(firstCoordinate, secondCoordinate);
+    public void testRandomFiringStrategyHandlesSmallBattlefield() {
+        RandomFiringStrategy strategy = new RandomFiringStrategy();
+        int battlefieldSize = 1;
+
+        for (int i = 0; i < 10; i++) {
+            int[] target = strategy.getNextTarget(battlefieldSize);
+            assertNotNull(target, "Target should not be null");
+            assertEquals(2, target.length, "Target should have two coordinates");
+            assertEquals(0, target[0], "X coordinate should be 0 for battlefield size 1");
+            assertEquals(0, target[1], "Y coordinate should be 0 for battlefield size 1");
+        }
     }
 
     @Test
-    void testEdgeCaseFiringRangeZero() {
-        RandomFiringStrategy edgeCaseStrategy = new RandomFiringStrategy(0, minX, maxX);
-        Exception exception = assertThrows(IllegalArgumentException.class, edgeCaseStrategy::fire);
-        assertEquals("Bound must be positive", exception.getMessage());
+    public void testRandomFiringStrategyHandlesLargeBattlefield() {
+        RandomFiringStrategy strategy = new RandomFiringStrategy();
+        int battlefieldSize = 1000;
+
+        for (int i = 0; i < 100; i++) {
+            int[] target = strategy.getNextTarget(battlefieldSize);
+            assertNotNull(target, "Target should not be null");
+            assertEquals(2, target.length, "Target should have two coordinates");
+            assertTrue(target[0] >= 0 && target[0] < battlefieldSize, "X coordinate should be within bounds");
+            assertTrue(target[1] >= 0 && target[1] < battlefieldSize, "Y coordinate should be within bounds");
+        }
     }
 
     @Test
-    void testEdgeCaseMinXEqualsMaxX() {
-        RandomFiringStrategy edgeCaseStrategy = new RandomFiringStrategy(firingRange, 5, 5);
-        Exception exception = assertThrows(IllegalArgumentException.class, edgeCaseStrategy::fire);
-        assertEquals("Bound must be positive", exception.getMessage());
+    public void testRandomFiringStrategyGeneratesDifferentCoordinates() {
+        RandomFiringStrategy strategy = new RandomFiringStrategy();
+        int battlefieldSize = 10;
+        boolean differentCoordinatesGenerated = false;
+
+        int[] firstTarget = strategy.getNextTarget(battlefieldSize);
+        for (int i = 0; i < 100; i++) {
+            int[] target = strategy.getNextTarget(battlefieldSize);
+            if (target[0] != firstTarget[0] || target[1] != firstTarget[1]) {
+                differentCoordinatesGenerated = true;
+                break;
+            }
+        }
+
+        assertTrue(differentCoordinatesGenerated, "Strategy should generate different coordinates over multiple calls");
+    }
+
+    @Test
+    public void testRandomFiringStrategyHandlesZeroBattlefieldSize() {
+        RandomFiringStrategy strategy = new RandomFiringStrategy();
+        int battlefieldSize = 0;
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            strategy.getNextTarget(battlefieldSize);
+        });
+
+        assertEquals("Battlefield size must be greater than 0", exception.getMessage(), "Exception message should indicate invalid battlefield size");
     }
 }

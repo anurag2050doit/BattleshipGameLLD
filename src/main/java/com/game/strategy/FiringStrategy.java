@@ -1,7 +1,8 @@
 package com.game.strategy;
 
 import com.game.entity.CoordinatePair;
+import com.game.entity.BattleField;
 
 public interface FiringStrategy {
-    CoordinatePair fire();
+    CoordinatePair getNextTarget(BattleField opponentBattleField);
 }
