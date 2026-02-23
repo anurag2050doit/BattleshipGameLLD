@@ -53,13 +53,7 @@ public class GameGUI {
         for (int i = 0; i < playerBattleField.getSize(); i++) {
             for (int j = 0; j < playerBattleField.getSize(); j++) {
                 JButton cell = new JButton();
-                if (playerBattleField.isHit(i, j)) {
-                    cell.setBackground(Color.RED);
-                } else if (playerBattleField.hasShip(i, j)) {
-                    cell.setBackground(Color.GRAY);
-                } else {
-                    cell.setBackground(Color.BLUE);
-                }
+                cell.setBackground(Color.BLUE);
                 battlefieldPanel.add(cell);
             }
         }

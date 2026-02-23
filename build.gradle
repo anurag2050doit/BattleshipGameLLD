@@ -1,9 +1,19 @@
 plugins {
     id 'java'
+    id 'application'
 }
 
 group 'com.battleshipgame'
 version '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+application {
+    mainClass = 'com.game.BattleShipGameApplication'
+}
 
 repositories {
     mavenCentral()
@@ -12,6 +22,8 @@ repositories {
 dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'com.google.guava:guava:31.1-jre'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
 }
 

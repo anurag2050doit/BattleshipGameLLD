@@ -1,7 +1,7 @@
 package com.game.service;
 
 import com.game.entity.Game;
-import com.game.state.GameState;
+import com.game.entity.GameStatus;
 
 public class MultiplayerGameService {
     private Game game;
@@ -16,7 +16,7 @@ public class MultiplayerGameService {
         // Update game state based on action
     }
 
-    public GameState getGameState() {
-        return game.getState();
+    public GameStatus getGameState() {
+        return game.getGameStatus();
     }
 }
