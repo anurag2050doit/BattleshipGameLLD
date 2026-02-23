@@ -33,7 +33,7 @@ public class Player {
         return (int) shipFleet.stream().filter(ship -> !ship.isDestroyed()).count();
     }
 
-    public CoordinatePair fire() {
-        return firingStrategy.fire();
+    public CoordinatePair fire(BattleField battleField) {
+        return firingStrategy.getNextTarget(battleField);
     }
 }

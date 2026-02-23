@@ -1,5 +1,8 @@
 package com.game.strategy;
 
+import com.game.entity.BattleField;
+import com.game.entity.CoordinatePair;
+
 import java.security.SecureRandom;
 
 public class RandomFiringStrategy implements FiringStrategy {
@@ -14,9 +17,10 @@ public class RandomFiringStrategy implements FiringStrategy {
     }
 
     @Override
-    public int[] getNextTarget(int battlefieldSize) {
-        int x = secureRandom.nextInt(battlefieldSize);
-        int y = secureRandom.nextInt(battlefieldSize);
-        return new int[]{x, y};
+    public CoordinatePair getNextTarget(BattleField opponentBattleField) {
+        int size = opponentBattleField.getSize();
+        int x = secureRandom.nextInt(size);
+        int y = secureRandom.nextInt(size);
+        return new CoordinatePair(x, y);
     }
 }

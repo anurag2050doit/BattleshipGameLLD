@@ -6,10 +6,17 @@ import java.util.List;
 public class Game {
 
     private GameStatus gameStatus;
+    private BattleField battleField;
     private final List<String> replayLog;
 
     public Game() {
         this.gameStatus = GameStatus.INITIALIZED;
+        this.replayLog = new ArrayList<>();
+    }
+
+    public Game(int battleFieldSize) {
+        this.gameStatus = GameStatus.INITIALIZED;
+        this.battleField = new BattleField(battleFieldSize);
         this.replayLog = new ArrayList<>();
     }
 
@@ -21,6 +28,18 @@ public class Game {
         this.gameStatus = gameStatus;
     }
 
+    public BattleField getBattleField() {
+        return battleField;
+    }
+
+    public void setBattleField(BattleField battleField) {
+        this.battleField = battleField;
+    }
+
+    public String getStatus() {
+        return gameStatus.name();
+    }
+
     public void addReplayLog(String logEntry) {
         replayLog.add(logEntry);
     }
@@ -28,6 +47,4 @@ public class Game {
     public List<String> getReplayLog() {
         return replayLog;
     }
-
-    // Other existing methods
 }
