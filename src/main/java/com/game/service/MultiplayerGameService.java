@@ -1,0 +1,22 @@
+package com.game.service;
+
+import com.game.entity.Game;
+import com.game.state.GameState;
+
+public class MultiplayerGameService {
+    private Game game;
+
+    public MultiplayerGameService(Game game) {
+        this.game = game;
+    }
+
+    public void handlePlayerAction(String playerId, String action) {
+        // Process player actions (e.g., firing missiles, updating game state)
+        System.out.println("Player " + playerId + " performed action: " + action);
+        // Update game state based on action
+    }
+
+    public GameState getGameState() {
+        return game.getState();
+    }
+}

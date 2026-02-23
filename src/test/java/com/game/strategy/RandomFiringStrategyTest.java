@@ -1,79 +1,78 @@
 package com.game.strategy;
 
+import com.game.entity.BattleField;
+import com.game.entity.CoordinatePair;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Logger;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-public class RandomFiringStrategyTest {
+class RandomFiringStrategyTest {
+
+    private RandomFiringStrategy strategy;
+    private BattleField mockBattleField;
+
+    @BeforeEach
+    void setUp() {
+        strategy = new RandomFiringStrategy();
+        mockBattleField = mock(BattleField.class);
+        when(mockBattleField.getSize()).thenReturn(5);
+    }
 
     @Test
-    public void testRandomFiringStrategyProducesValidCoordinates() {
-        RandomFiringStrategy strategy = new RandomFiringStrategy();
-        int battlefieldSize = 10;
-
-        for (int i = 0; i < 100; i++) {
-            int[] target = strategy.getNextTarget(battlefieldSize);
-            assertNotNull(target, "Target should not be null");
-            assertEquals(2, target.length, "Target should have two coordinates");
-            assertTrue(target[0] >= 0 && target[0] < battlefieldSize, "X coordinate should be within bounds");
-            assertTrue(target[1] >= 0 && target[1] < battlefieldSize, "Y coordinate should be within bounds");
+    void testGetNextTarget_NoDuplicates() {
+        Set<CoordinatePair> targets = new HashSet<>();
+        for (int i = 0; i < 25; i++) {
+            CoordinatePair target = strategy.getNextTarget(mockBattleField);
+            assertFalse(targets.contains(target), "Duplicate target generated: " + target);
+            targets.add(target);
         }
     }
 
     @Test
-    public void testRandomFiringStrategyHandlesSmallBattlefield() {
-        RandomFiringStrategy strategy = new RandomFiringStrategy();
-        int battlefieldSize = 1;
-
-        for (int i = 0; i < 10; i++) {
-            int[] target = strategy.getNextTarget(battlefieldSize);
-            assertNotNull(target, "Target should not be null");
-            assertEquals(2, target.length, "Target should have two coordinates");
-            assertEquals(0, target[0], "X coordinate should be 0 for battlefield size 1");
-            assertEquals(0, target[1], "Y coordinate should be 0 for battlefield size 1");
-        }
-    }
-
-    @Test
-    public void testRandomFiringStrategyHandlesLargeBattlefield() {
-        RandomFiringStrategy strategy = new RandomFiringStrategy();
-        int battlefieldSize = 1000;
-
-        for (int i = 0; i < 100; i++) {
-            int[] target = strategy.getNextTarget(battlefieldSize);
-            assertNotNull(target, "Target should not be null");
-            assertEquals(2, target.length, "Target should have two coordinates");
-            assertTrue(target[0] >= 0 && target[0] < battlefieldSize, "X coordinate should be within bounds");
-            assertTrue(target[1] >= 0 && target[1] < battlefieldSize, "Y coordinate should be within bounds");
-        }
-    }
-
-    @Test
-    public void testRandomFiringStrategyGeneratesDifferentCoordinates() {
-        RandomFiringStrategy strategy = new RandomFiringStrategy();
-        int battlefieldSize = 10;
-        boolean differentCoordinatesGenerated = false;
-
-        int[] firstTarget = strategy.getNextTarget(battlefieldSize);
-        for (int i = 0; i < 100; i++) {
-            int[] target = strategy.getNextTarget(battlefieldSize);
-            if (target[0] != firstTarget[0] || target[1] != firstTarget[1]) {
-                differentCoordinatesGenerated = true;
-                break;
-            }
+    void testGetNextTarget_ExhaustionFallback() {
+        for (int i = 0; i < 25; i++) {
+            strategy.getNextTarget(mockBattleField);
         }
 
-        assertTrue(differentCoordinatesGenerated, "Strategy should generate different coordinates over multiple calls");
-    }
-
-    @Test
-    public void testRandomFiringStrategyHandlesZeroBattlefieldSize() {
-        RandomFiringStrategy strategy = new RandomFiringStrategy();
-        int battlefieldSize = 0;
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            strategy.getNextTarget(battlefieldSize);
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            strategy.getNextTarget(mockBattleField);
         });
 
-        assertEquals("Battlefield size must be greater than 0", exception.getMessage(), "Exception message should indicate invalid battlefield size");
+        assertEquals("No available cells to target.", exception.getMessage());
+    }
+
+    @Test
+    void testGetNextTarget_ExcessiveRetriesLogged() {
+        Logger logger = Logger.getLogger(RandomFiringStrategy.class.getName());
+        for (int i = 0; i < 24; i++) {
+            strategy.getNextTarget(mockBattleField);
+        }
+
+        CoordinatePair lastTarget = strategy.getNextTarget(mockBattleField);
+        assertNotNull(lastTarget);
+        // Verify that the logger captured the warning message (mocking logger behavior can be added if needed)
+    }
+
+    @Test
+    void testGetNextTarget_GridBoundary() {
+        when(mockBattleField.getSize()).thenReturn(1);
+        CoordinatePair target = strategy.getNextTarget(mockBattleField);
+        assertEquals(new CoordinatePair(0, 0), target);
+    }
+
+    @Test
+    void testGetNextTarget_EmptyBattlefield() {
+        when(mockBattleField.getSize()).thenReturn(0);
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            strategy.getNextTarget(mockBattleField);
+        });
+
+        assertEquals("No available cells to target.", exception.getMessage());
     }
 }

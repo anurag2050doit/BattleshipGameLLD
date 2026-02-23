@@ -1,9 +1,10 @@
 package com.game.gui;
 
 import com.game.entity.BattleField;
-import com.game.entity.Game;
-import com.game.entity.Player;
-
+import com.game.state.GameState;
+import com.game.state.InProgressState;
+import com.game.state.GameOverState;
+import com.game.state.InitializedState;
 import javax.swing.*;
 import java.awt.*;
 
@@ -12,47 +13,57 @@ public class GameGUI {
     private JFrame frame;
     private JPanel battlefieldPanel;
     private JLabel statusLabel;
+    private BattleField playerBattleField;
+    private BattleField opponentBattleField;
 
-    public GameGUI(Game game) {
-        initialize(game);
+    public GameGUI(BattleField playerBattleField, BattleField opponentBattleField) {
+        this.playerBattleField = playerBattleField;
+        this.opponentBattleField = opponentBattleField;
+        initialize();
     }
 
-    private void initialize(Game game) {
-        frame = new JFrame("BattleShip Game");
+    private void initialize() {
+        frame = new JFrame("Battleship Game");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
 
-        battlefieldPanel = new JPanel();
-        battlefieldPanel.setLayout(new GridLayout(game.getBattleField().getSize(), game.getBattleField().getSize()));
-        populateBattlefield(game.getBattleField());
-
-        statusLabel = new JLabel("Game Status: " + game.getStatus());
-        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        battlefieldPanel = new JPanel(new GridLayout(playerBattleField.getSize(), playerBattleField.getSize()));
+        statusLabel = new JLabel("Game Initialized", SwingConstants.CENTER);
 
         frame.add(battlefieldPanel, BorderLayout.CENTER);
         frame.add(statusLabel, BorderLayout.SOUTH);
         frame.setVisible(true);
+
+        renderBattlefield();
     }
 
-    private void populateBattlefield(BattleField battleField) {
-        int size = battleField.getSize();
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+    public void updateGameState(GameState gameState) {
+        if (gameState instanceof InProgressState) {
+            statusLabel.setText("Game In Progress");
+        } else if (gameState instanceof GameOverState) {
+            statusLabel.setText("Game Over");
+        } else if (gameState instanceof InitializedState) {
+            statusLabel.setText("Game Initialized");
+        }
+        renderBattlefield();
+    }
+
+    private void renderBattlefield() {
+        battlefieldPanel.removeAll();
+        for (int i = 0; i < playerBattleField.getSize(); i++) {
+            for (int j = 0; j < playerBattleField.getSize(); j++) {
                 JButton cell = new JButton();
-                cell.setBackground(Color.BLUE);
+                if (playerBattleField.isHit(i, j)) {
+                    cell.setBackground(Color.RED);
+                } else if (playerBattleField.hasShip(i, j)) {
+                    cell.setBackground(Color.GRAY);
+                } else {
+                    cell.setBackground(Color.BLUE);
+                }
                 battlefieldPanel.add(cell);
             }
         }
-    }
-
-    public void updateBattlefield(BattleField battleField) {
-        battlefieldPanel.removeAll();
-        populateBattlefield(battleField);
         battlefieldPanel.revalidate();
         battlefieldPanel.repaint();
-    }
-
-    public void updateStatus(String status) {
-        statusLabel.setText("Game Status: " + status);
     }
 }

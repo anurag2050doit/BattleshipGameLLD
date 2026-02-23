@@ -1,50 +1,64 @@
 package com.game.gui;
 
 import com.game.entity.BattleField;
-import com.game.entity.Game;
-import org.junit.jupiter.api.BeforeEach;
+import com.game.state.GameOverState;
+import com.game.state.InitializedState;
+import com.game.state.InProgressState;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GameGUITest {
+public class GameGUITest {
 
-    private Game game;
-    private GameGUI gameGUI;
-
-    @BeforeEach
-    void setUp() {
-        game = new Game(5);
-        gameGUI = new GameGUI(game);
+    @Test
+    public void testGameGUIInitialization() {
+        BattleField playerBattleField = new BattleField(6);
+        BattleField opponentBattleField = new BattleField(6);
+        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
+        assertNotNull(gameGUI);
     }
 
     @Test
-    void testInitializeGUIComponents() {
-        JFrame frame = (JFrame) SwingUtilities.getAncestorOfClass(JFrame.class, gameGUI);
-        assertNotNull(frame, "Frame should be initialized");
-        assertEquals("BattleShip Game", frame.getTitle(), "Frame title should be set correctly");
-    }
-
-    @Test
-    void testBattlefieldPopulation() {
-        BattleField battlefield = game.getBattleField();
-        assertEquals(25, battlefield.getSize() * battlefield.getSize(), "Battlefield should have correct number of cells");
-    }
-
-    @Test
-    void testUpdateBattlefield() {
-        BattleField battlefield = game.getBattleField();
-        gameGUI.updateBattlefield(battlefield);
-        assertEquals(25, battlefield.getSize() * battlefield.getSize(), "Battlefield should update correctly");
-    }
-
-    @Test
-    void testUpdateStatus() {
-        gameGUI.updateStatus("Test Status");
+    public void testUpdateGameStateToInitialized() {
+        BattleField playerBattleField = new BattleField(6);
+        BattleField opponentBattleField = new BattleField(6);
+        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
+        gameGUI.updateGameState(new InitializedState());
         JLabel statusLabel = (JLabel) SwingUtilities.getAncestorOfClass(JLabel.class, gameGUI);
-        assertNotNull(statusLabel, "Status label should be initialized");
-        assertEquals("Game Status: Test Status", statusLabel.getText(), "Status label should update correctly");
+        assertEquals("Game Initialized", statusLabel.getText());
+    }
+
+    @Test
+    public void testUpdateGameStateToInProgress() {
+        BattleField playerBattleField = new BattleField(6);
+        BattleField opponentBattleField = new BattleField(6);
+        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
+        gameGUI.updateGameState(new InProgressState());
+        JLabel statusLabel = (JLabel) SwingUtilities.getAncestorOfClass(JLabel.class, gameGUI);
+        assertEquals("Game In Progress", statusLabel.getText());
+    }
+
+    @Test
+    public void testUpdateGameStateToGameOver() {
+        BattleField playerBattleField = new BattleField(6);
+        BattleField opponentBattleField = new BattleField(6);
+        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
+        gameGUI.updateGameState(new GameOverState());
+        JLabel statusLabel = (JLabel) SwingUtilities.getAncestorOfClass(JLabel.class, gameGUI);
+        assertEquals("Game Over", statusLabel.getText());
+    }
+
+    @Test
+    public void testRenderBattlefield() {
+        BattleField playerBattleField = new BattleField(6);
+        BattleField opponentBattleField = new BattleField(6);
+        playerBattleField.placeShip(0, 0);
+        playerBattleField.hit(0, 0);
+        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
+        JPanel battlefieldPanel = (JPanel) SwingUtilities.getAncestorOfClass(JPanel.class, gameGUI);
+        JButton cell = (JButton) battlefieldPanel.getComponent(0);
+        assertEquals("java.awt.Color[r=255,g=0,b=0]", cell.getBackground().toString());
     }
 }
