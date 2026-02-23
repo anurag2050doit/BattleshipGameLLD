@@ -1,12 +1,33 @@
 package com.game.entity;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
 
-@Setter
-@Getter
 public class Game {
-    private GameStatus gameStatus = GameStatus.NOT_STARTED;
-    private BattleField battleField;
-    private Player winner;
+
+    private GameStatus gameStatus;
+    private final List<String> replayLog;
+
+    public Game() {
+        this.gameStatus = GameStatus.INITIALIZED;
+        this.replayLog = new ArrayList<>();
+    }
+
+    public GameStatus getGameStatus() {
+        return gameStatus;
+    }
+
+    public void setGameStatus(GameStatus gameStatus) {
+        this.gameStatus = gameStatus;
+    }
+
+    public void addReplayLog(String logEntry) {
+        replayLog.add(logEntry);
+    }
+
+    public List<String> getReplayLog() {
+        return replayLog;
+    }
+
+    // Other existing methods
 }

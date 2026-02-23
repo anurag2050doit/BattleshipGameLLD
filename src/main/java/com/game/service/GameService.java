@@ -1,41 +1,36 @@
 package com.game.service;
 
-import com.game.state.GameState;
-import com.game.state.InitializedState;
-import com.game.state.InProgressState;
-import com.game.state.GameOverState;
+import com.game.entity.Game;
+import com.game.entity.GameStatus;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class GameService {
-    private GameState currentState;
 
-    public GameService() {
-        this.currentState = new InitializedState(this);
-    }
+    private Game currentGame;
 
-    public void setState(GameState state) {
-        this.currentState = state;
-    }
+    public void saveGameReplay(String filePath) throws IOException {
+        if (currentGame == null || currentGame.getGameStatus() != GameStatus.GAME_OVER) {
+            throw new IllegalStateException("Game must be over to save replay.");
+        }
 
-    public void startGame() {
-        System.out.println("Starting the game...");
-        setState(new InProgressState(this));
-    }
-
-    public void playTurn() {
-        System.out.println("Playing a turn...");
-        // Logic to determine if the game is over
-        boolean isGameOver = checkGameOver();
-        if (isGameOver) {
-            setState(new GameOverState());
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            List<String> replayLog = currentGame.getReplayLog();
+            for (String logEntry : replayLog) {
+                writer.write(logEntry);
+                writer.newLine();
+            }
         }
     }
 
-    public void handleState() {
-        currentState.handleState();
+    public void loadGameReplay(String filePath) throws IOException {
+        List<String> replayLog = Files.readAllLines(Paths.get(filePath));
+        replayLog.forEach(System.out::println);
     }
 
-    private boolean checkGameOver() {
-        // Placeholder logic for game over condition
-        return false;
-    }
+    // Other existing methods
 }
