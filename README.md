@@ -42,6 +42,12 @@ PlayerA's turn: Missile fired at (5, 3): "Hit" B-SH2 destroyed
 GameOver. PlayerA wins.
 ```
 
+## Security Best Practices
+
+- **Environment Variables**: Store sensitive information such as database credentials in environment variables.
+- **Secrets Management**: Use a secure secrets management tool to manage sensitive configuration.
+- **Git Ignore**: Ensure sensitive files like `application.properties` are added to `.gitignore` to prevent accidental commits.
+
 ## Continuous Integration
 
 This project uses GitHub Actions for Continuous Integration (CI). The CI pipeline automatically builds and tests the code on every push or pull request to the `main` branch. This ensures code quality and prevents regressions.
