@@ -1,63 +1,75 @@
 package com.game.gui;
 
-import com.game.entity.BattleField;
-import com.game.state.GameState;
-import com.game.state.InProgressState;
-import com.game.state.GameOverState;
-import com.game.state.InitializedState;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class GameGUI {
 
     private JFrame frame;
-    private JPanel battlefieldPanel;
+    private JPanel playerAPanel;
+    private JPanel playerBPanel;
     private JLabel statusLabel;
-    private BattleField playerBattleField;
-    private BattleField opponentBattleField;
+    private JButton[][] playerAGrid;
+    private JButton[][] playerBGrid;
+    private boolean isPlayerATurn;
 
-    public GameGUI(BattleField playerBattleField, BattleField opponentBattleField) {
-        this.playerBattleField = playerBattleField;
-        this.opponentBattleField = opponentBattleField;
-        initialize();
-    }
-
-    private void initialize() {
+    public GameGUI(int gridSize) {
         frame = new JFrame("Battleship Game");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
+        frame.setLayout(new BorderLayout());
 
-        battlefieldPanel = new JPanel(new GridLayout(playerBattleField.getSize(), playerBattleField.getSize()));
-        statusLabel = new JLabel("Game Initialized", SwingConstants.CENTER);
+        playerAPanel = new JPanel(new GridLayout(gridSize, gridSize));
+        playerBPanel = new JPanel(new GridLayout(gridSize, gridSize));
+        statusLabel = new JLabel("Player A's Turn", SwingConstants.CENTER);
+        playerAGrid = new JButton[gridSize][gridSize];
+        playerBGrid = new JButton[gridSize][gridSize];
+        isPlayerATurn = true;
 
-        frame.add(battlefieldPanel, BorderLayout.CENTER);
+        initializeGrid(playerAGrid, playerAPanel, "Player A");
+        initializeGrid(playerBGrid, playerBPanel, "Player B");
+
+        frame.add(playerAPanel, BorderLayout.WEST);
+        frame.add(playerBPanel, BorderLayout.EAST);
         frame.add(statusLabel, BorderLayout.SOUTH);
+
         frame.setVisible(true);
-
-        renderBattlefield();
     }
 
-    public void updateGameState(GameState gameState) {
-        if (gameState instanceof InProgressState) {
-            statusLabel.setText("Game In Progress");
-        } else if (gameState instanceof GameOverState) {
-            statusLabel.setText("Game Over");
-        } else if (gameState instanceof InitializedState) {
-            statusLabel.setText("Game Initialized");
-        }
-        renderBattlefield();
-    }
-
-    private void renderBattlefield() {
-        battlefieldPanel.removeAll();
-        for (int i = 0; i < playerBattleField.getSize(); i++) {
-            for (int j = 0; j < playerBattleField.getSize(); j++) {
-                JButton cell = new JButton();
-                cell.setBackground(Color.BLUE);
-                battlefieldPanel.add(cell);
+    private void initializeGrid(JButton[][] grid, JPanel panel, String player) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[i].length; j++) {
+                JButton button = new JButton();
+                button.setBackground(Color.BLUE);
+                button.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        handleButtonClick(button, player);
+                    }
+                });
+                grid[i][j] = button;
+                panel.add(button);
             }
         }
-        battlefieldPanel.revalidate();
-        battlefieldPanel.repaint();
+    }
+
+    private void handleButtonClick(JButton button, String player) {
+        if ((isPlayerATurn && player.equals("Player A")) || (!isPlayerATurn && player.equals("Player B"))) {
+            if (button.getBackground() == Color.BLUE) {
+                button.setBackground(Color.RED);
+                statusLabel.setText((isPlayerATurn ? "Player B's Turn" : "Player A's Turn"));
+                isPlayerATurn = !isPlayerATurn;
+            } else {
+                JOptionPane.showMessageDialog(frame, "This cell is already hit!", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(frame, "It's not your turn!", "Warning", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    public static void main(String[] args) {
+        new GameGUI(10);
     }
 }

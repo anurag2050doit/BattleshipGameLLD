@@ -1,64 +1,70 @@
 package com.game.gui;
 
-import com.game.entity.BattleField;
-import com.game.state.GameOverState;
-import com.game.state.InitializedState;
-import com.game.state.InProgressState;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
+import java.awt.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class GameGUITest {
+class GameGUITest {
 
-    @Test
-    public void testGameGUIInitialization() {
-        BattleField playerBattleField = new BattleField(6);
-        BattleField opponentBattleField = new BattleField(6);
-        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
-        assertNotNull(gameGUI);
+    private GameGUI gameGUI;
+
+    @BeforeEach
+    void setUp() {
+        gameGUI = new GameGUI(10);
     }
 
     @Test
-    public void testUpdateGameStateToInitialized() {
-        BattleField playerBattleField = new BattleField(6);
-        BattleField opponentBattleField = new BattleField(6);
-        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
-        gameGUI.updateGameState(new InitializedState());
-        JLabel statusLabel = (JLabel) SwingUtilities.getAncestorOfClass(JLabel.class, gameGUI);
-        assertEquals("Game Initialized", statusLabel.getText());
+    void testInitialTurn() {
+        JLabel statusLabel = getStatusLabel();
+        assertEquals("Player A's Turn", statusLabel.getText(), "Initial turn should be Player A's.");
     }
 
     @Test
-    public void testUpdateGameStateToInProgress() {
-        BattleField playerBattleField = new BattleField(6);
-        BattleField opponentBattleField = new BattleField(6);
-        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
-        gameGUI.updateGameState(new InProgressState());
-        JLabel statusLabel = (JLabel) SwingUtilities.getAncestorOfClass(JLabel.class, gameGUI);
-        assertEquals("Game In Progress", statusLabel.getText());
+    void testValidMove() {
+        JButton[][] playerAGrid = getPlayerAGrid();
+        JButton button = playerAGrid[0][0];
+        button.doClick();
+        assertEquals(Color.RED, button.getBackground(), "Button should turn red after a valid move.");
+        JLabel statusLabel = getStatusLabel();
+        assertEquals("Player B's Turn", statusLabel.getText(), "Turn should switch to Player B.");
     }
 
     @Test
-    public void testUpdateGameStateToGameOver() {
-        BattleField playerBattleField = new BattleField(6);
-        BattleField opponentBattleField = new BattleField(6);
-        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
-        gameGUI.updateGameState(new GameOverState());
-        JLabel statusLabel = (JLabel) SwingUtilities.getAncestorOfClass(JLabel.class, gameGUI);
-        assertEquals("Game Over", statusLabel.getText());
+    void testInvalidMoveOutOfTurn() {
+        JButton[][] playerBGrid = getPlayerBGrid();
+        JButton button = playerBGrid[0][0];
+        button.doClick();
+        JLabel statusLabel = getStatusLabel();
+        assertEquals("Player A's Turn", statusLabel.getText(), "Turn should remain Player A's after an invalid move.");
     }
 
     @Test
-    public void testRenderBattlefield() {
-        BattleField playerBattleField = new BattleField(6);
-        BattleField opponentBattleField = new BattleField(6);
-        playerBattleField.placeShip(0, 0);
-        playerBattleField.hit(0, 0);
-        GameGUI gameGUI = new GameGUI(playerBattleField, opponentBattleField);
-        JPanel battlefieldPanel = (JPanel) SwingUtilities.getAncestorOfClass(JPanel.class, gameGUI);
-        JButton cell = (JButton) battlefieldPanel.getComponent(0);
-        assertEquals("java.awt.Color[r=255,g=0,b=0]", cell.getBackground().toString());
+    void testInvalidMoveAlreadyHitCell() {
+        JButton[][] playerAGrid = getPlayerAGrid();
+        JButton button = playerAGrid[0][0];
+        button.doClick();
+        button.doClick();
+        assertEquals(Color.RED, button.getBackground(), "Button color should remain red after clicking an already hit cell.");
+    }
+
+    private JLabel getStatusLabel() {
+        for (Component component : gameGUI.frame.getContentPane().getComponents()) {
+            if (component instanceof JLabel) {
+                return (JLabel) component;
+            }
+        }
+        throw new IllegalStateException("Status label not found.");
+    }
+
+    private JButton[][] getPlayerAGrid() {
+        return gameGUI.playerAGrid;
+    }
+
+    private JButton[][] getPlayerBGrid() {
+        return gameGUI.playerBGrid;
     }
 }
