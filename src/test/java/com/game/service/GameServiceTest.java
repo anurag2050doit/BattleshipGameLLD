@@ -1,86 +1,97 @@
 package com.game.service;
 
 import com.game.entity.Game;
-import com.game.entity.GameStatus;
+import com.game.validation.GameValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class GameServiceTest {
 
     private GameService gameService;
-    private Game game;
+    private GameValidator gameValidator;
 
     @BeforeEach
     public void setUp() {
-        gameService = new GameService();
-        game = new Game();
-        game.setGameStatus(GameStatus.GAME_OVER);
-        game.addReplayLog("PlayerA fires at (3, 3): Hit");
-        game.addReplayLog("PlayerB fires at (4, 4): Miss");
+        gameValidator = mock(GameValidator.class);
+        gameService = new GameService(gameValidator);
     }
 
     @Test
-    public void testSaveGameReplay() throws IOException {
-        String filePath = "test_replay.log";
-        gameService.saveGameReplay(filePath);
+    public void testInitGameRateLimiting() {
+        String clientId = "testClient";
 
-        List<String> lines = Files.readAllLines(Paths.get(filePath));
-        assertEquals(2, lines.size());
-        assertEquals("PlayerA fires at (3, 3): Hit", lines.get(0));
-        assertEquals("PlayerB fires at (4, 4): Miss", lines.get(1));
+        // First request should succeed
+        Game game1 = gameService.initGame(clientId, 10);
+        assertNotNull(game1);
 
-        Files.delete(Paths.get(filePath));
-    }
-
-    @Test
-    public void testLoadGameReplay() throws IOException {
-        String filePath = "test_replay.log";
-        Files.write(Paths.get(filePath), game.getReplayLog());
-
-        gameService.loadGameReplay(filePath);
-
-        Files.delete(Paths.get(filePath));
-    }
-
-    @Test
-    public void testSaveGameReplayWhenGameNotOver() {
-        game.setGameStatus(GameStatus.IN_PROGRESS);
-        String filePath = "test_replay.log";
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            gameService.saveGameReplay(filePath);
+        // Second request within rate limit interval should fail
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            gameService.initGame(clientId, 10);
         });
-
-        assertEquals("Game must be over to save replay.", exception.getMessage());
+        assertEquals("Rate limit exceeded. Please try again later.", exception.getMessage());
     }
 
     @Test
-    public void testSaveGameReplayWithNoGame() {
-        gameService = new GameService();
-        String filePath = "test_replay.log";
+    public void testInitGameAfterRateLimitInterval() throws InterruptedException {
+        String clientId = "testClient";
 
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            gameService.saveGameReplay(filePath);
-        });
+        // First request should succeed
+        Game game1 = gameService.initGame(clientId, 10);
+        assertNotNull(game1);
 
-        assertEquals("Game must be over to save replay.", exception.getMessage());
+        // Wait for rate limit interval to pass
+        Thread.sleep(1100);
+
+        // Second request should succeed after interval
+        Game game2 = gameService.initGame(clientId, 10);
+        assertNotNull(game2);
     }
 
     @Test
-    public void testLoadGameReplayWithInvalidFilePath() {
-        String invalidFilePath = "non_existent_file.log";
+    public void testInitGameWithDifferentClients() {
+        String clientId1 = "client1";
+        String clientId2 = "client2";
 
-        IOException exception = assertThrows(IOException.class, () -> {
-            gameService.loadGameReplay(invalidFilePath);
+        // Both clients should be able to initialize games independently
+        Game game1 = gameService.initGame(clientId1, 10);
+        assertNotNull(game1);
+
+        Game game2 = gameService.initGame(clientId2, 10);
+        assertNotNull(game2);
+    }
+
+    @Test
+    public void testInitGameInvalidSize() {
+        String clientId = "testClient";
+
+        // Mock validation to throw an exception for invalid game size
+        doThrow(new IllegalArgumentException("Invalid game size.")).when(gameValidator).validateGame(any(Game.class));
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            gameService.initGame(clientId, -1);
         });
+        assertEquals("Invalid game size.", exception.getMessage());
+    }
 
-        assertTrue(exception.getMessage().contains("non_existent_file.log"));
+    @Test
+    public void testInitGameConcurrentRequests() throws InterruptedException {
+        String clientId = "testClient";
+
+        // First request should succeed
+        Game game1 = gameService.initGame(clientId, 10);
+        assertNotNull(game1);
+
+        // Simulate concurrent requests within the rate limit interval
+        Thread thread = new Thread(() -> {
+            Exception exception = assertThrows(IllegalStateException.class, () -> {
+                gameService.initGame(clientId, 10);
+            });
+            assertEquals("Rate limit exceeded. Please try again later.", exception.getMessage());
+        });
+        thread.start();
+        thread.join();
     }
 }
