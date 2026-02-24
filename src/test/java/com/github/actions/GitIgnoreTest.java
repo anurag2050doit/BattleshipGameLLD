@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class GitIgnoreTest {
 
     @Test
-    void testGitIgnoreContainsApplicationProperties() throws Exception {
-        String gitIgnoreContent = Files.readString(Paths.get(".gitignore"));
-        assertTrue(gitIgnoreContent.contains("application.properties"), "application.properties should be listed in .gitignore.");
+    void testApplicationPropertiesIgnored() throws Exception {
+        String gitignoreContent = Files.readString(Paths.get(".gitignore"));
+        assertTrue(gitignoreContent.contains("application.properties"), "application.properties should be listed in .gitignore");
     }
 }

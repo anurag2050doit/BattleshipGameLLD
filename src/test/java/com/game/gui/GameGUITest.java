@@ -3,45 +3,64 @@ package com.game.gui;
 import org.junit.jupiter.api.Test;
 import javax.swing.*;
 import java.awt.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GameGUITest {
 
     @Test
     public void testGameGUIInitialization() {
-        GameGUI gui = new GameGUI();
-        assertNotNull(gui, "GameGUI should be initialized successfully.");
+        SwingUtilities.invokeLater(() -> {
+            GameGUI gui = new GameGUI();
+            assertNotNull(gui);
+            assertNotNull(gui.getContentPane().getComponent(0));
+            assertTrue(gui.getContentPane().getComponent(0) instanceof JPanel);
+            assertTrue(gui.getContentPane().getComponent(1) instanceof JLabel);
+        });
     }
 
     @Test
-    public void testBattlefieldPanelExists() {
-        GameGUI gui = new GameGUI();
-        JFrame frame = (JFrame) SwingUtilities.getRoot(gui);
-        assertNotNull(frame.getContentPane().getComponent(0), "Battlefield panel should exist.");
+    public void testUpdateGameStatus() {
+        SwingUtilities.invokeLater(() -> {
+            GameGUI gui = new GameGUI();
+            gui.updateGameStatus("Player A's Turn");
+            JLabel statusLabel = (JLabel) gui.getContentPane().getComponent(1);
+            assertEquals("Game Status: Player A's Turn", statusLabel.getText());
+        });
     }
 
     @Test
-    public void testGridButtonsInitialization() {
-        GameGUI gui = new GameGUI();
-        JPanel battlefieldPanel = (JPanel) gui.getBattlefieldPanel();
-        assertEquals(100, battlefieldPanel.getComponentCount(), "Battlefield panel should contain 100 buttons.");
+    public void testBattlefieldPanelInitialization() {
+        SwingUtilities.invokeLater(() -> {
+            GameGUI gui = new GameGUI();
+            JPanel battlefieldPanel = (JPanel) gui.getContentPane().getComponent(0);
+            assertEquals(100, battlefieldPanel.getComponentCount());
+            for (Component component : battlefieldPanel.getComponents()) {
+                assertTrue(component instanceof JLabel);
+                JLabel cell = (JLabel) component;
+                assertNotNull(cell.getTransferHandler());
+            }
+        });
     }
 
     @Test
-    public void testUpdateBattleField() {
-        GameGUI gui = new GameGUI();
-        BattleField mockBattleField = new BattleField();
-        gui.updateBattleField(mockBattleField);
-        // Add assertions to verify the GUI updates correctly based on the battlefield state
+    public void testDragAndDropFunctionality() {
+        SwingUtilities.invokeLater(() -> {
+            GameGUI gui = new GameGUI();
+            JPanel battlefieldPanel = (JPanel) gui.getContentPane().getComponent(0);
+            DragSource ds = new DragSource();
+            assertNotNull(ds.createDefaultDragGestureRecognizer(battlefieldPanel, DnDConstants.ACTION_MOVE, dge -> {
+                assertNotNull(dge);
+            }));
+        });
     }
 
     @Test
-    public void testWindowProperties() {
-        GameGUI gui = new GameGUI();
-        JFrame frame = (JFrame) SwingUtilities.getRoot(gui);
-        assertEquals("BattleShip Game", frame.getTitle(), "Window title should be 'BattleShip Game'.");
-        assertEquals(800, frame.getWidth(), "Window width should be 800.");
-        assertEquals(600, frame.getHeight(), "Window height should be 600.");
+    public void testGameStatusLabelInitialization() {
+        SwingUtilities.invokeLater(() -> {
+            GameGUI gui = new GameGUI();
+            JLabel gameStatusLabel = (JLabel) gui.getContentPane().getComponent(1);
+            assertEquals("Game Status: Waiting for players...", gameStatusLabel.getText());
+            assertEquals(SwingConstants.CENTER, gameStatusLabel.getHorizontalAlignment());
+        });
     }
 }

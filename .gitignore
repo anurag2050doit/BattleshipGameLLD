@@ -1,5 +1,4 @@
 *.class
-*.log
 *.jar
 *.war
 *.ear
@@ -8,4 +7,6 @@
 build/
 out/
 !gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+.DS_Store
 application.properties

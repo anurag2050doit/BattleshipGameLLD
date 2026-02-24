@@ -2,39 +2,59 @@ package com.game.gui;
 
 import javax.swing.*;
 import java.awt.*;
-import com.game.entity.BattleField;
+import java.awt.dnd.*;
+import java.awt.event.*;
 
-public class GameGUI {
+public class GameGUI extends JFrame {
 
-    private JFrame frame;
     private JPanel battlefieldPanel;
+    private JLabel gameStatusLabel;
 
     public GameGUI() {
-        initialize();
+        setTitle("BattleShip Game");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        initializeBattlefield();
+        initializeGameStatus();
+
+        setVisible(true);
     }
 
-    private void initialize() {
-        frame = new JFrame("BattleShip Game");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-
+    private void initializeBattlefield() {
         battlefieldPanel = new JPanel();
         battlefieldPanel.setLayout(new GridLayout(10, 10));
-        frame.add(battlefieldPanel, BorderLayout.CENTER);
+        battlefieldPanel.setBorder(BorderFactory.createTitledBorder("Battlefield"));
 
-        JButton[][] gridButtons = new JButton[10][10];
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 10; j++) {
-                gridButtons[i][j] = new JButton();
-                battlefieldPanel.add(gridButtons[i][j]);
-            }
+        for (int i = 0; i < 100; i++) {
+            JLabel cell = new JLabel();
+            cell.setPreferredSize(new Dimension(50, 50));
+            cell.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            cell.setTransferHandler(new TransferHandler("text"));
+            battlefieldPanel.add(cell);
         }
 
-        frame.setVisible(true);
+        DragSource ds = new DragSource();
+        ds.createDefaultDragGestureRecognizer(battlefieldPanel, DnDConstants.ACTION_MOVE, new DragGestureListener() {
+            @Override
+            public void dragGestureRecognized(DragGestureEvent dge) {
+                // Drag-and-drop logic for ship placement
+            }
+        });
+
+        add(battlefieldPanel, BorderLayout.CENTER);
     }
 
-    public void updateBattleField(BattleField battleField) {
-        // Logic to update the GUI based on the battlefield state
+    private void initializeGameStatus() {
+        gameStatusLabel = new JLabel("Game Status: Waiting for players...");
+        gameStatusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gameStatusLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(gameStatusLabel, BorderLayout.SOUTH);
+    }
+
+    public void updateGameStatus(String status) {
+        gameStatusLabel.setText("Game Status: " + status);
     }
 
     public static void main(String[] args) {
