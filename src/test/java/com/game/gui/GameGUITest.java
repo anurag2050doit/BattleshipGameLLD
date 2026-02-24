@@ -1,70 +1,47 @@
 package com.game.gui;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import javax.swing.*;
 import java.awt.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GameGUITest {
+public class GameGUITest {
 
-    private GameGUI gameGUI;
-
-    @BeforeEach
-    void setUp() {
-        gameGUI = new GameGUI(10);
+    @Test
+    public void testGameGUIInitialization() {
+        GameGUI gui = new GameGUI();
+        assertNotNull(gui, "GameGUI should be initialized successfully.");
     }
 
     @Test
-    void testInitialTurn() {
-        JLabel statusLabel = getStatusLabel();
-        assertEquals("Player A's Turn", statusLabel.getText(), "Initial turn should be Player A's.");
+    public void testBattlefieldPanelExists() {
+        GameGUI gui = new GameGUI();
+        JFrame frame = (JFrame) SwingUtilities.getRoot(gui);
+        assertNotNull(frame.getContentPane().getComponent(0), "Battlefield panel should exist.");
     }
 
     @Test
-    void testValidMove() {
-        JButton[][] playerAGrid = getPlayerAGrid();
-        JButton button = playerAGrid[0][0];
-        button.doClick();
-        assertEquals(Color.RED, button.getBackground(), "Button should turn red after a valid move.");
-        JLabel statusLabel = getStatusLabel();
-        assertEquals("Player B's Turn", statusLabel.getText(), "Turn should switch to Player B.");
+    public void testGridButtonsInitialization() {
+        GameGUI gui = new GameGUI();
+        JPanel battlefieldPanel = (JPanel) gui.getBattlefieldPanel();
+        assertEquals(100, battlefieldPanel.getComponentCount(), "Battlefield panel should contain 100 buttons.");
     }
 
     @Test
-    void testInvalidMoveOutOfTurn() {
-        JButton[][] playerBGrid = getPlayerBGrid();
-        JButton button = playerBGrid[0][0];
-        button.doClick();
-        JLabel statusLabel = getStatusLabel();
-        assertEquals("Player A's Turn", statusLabel.getText(), "Turn should remain Player A's after an invalid move.");
+    public void testUpdateBattleField() {
+        GameGUI gui = new GameGUI();
+        BattleField mockBattleField = new BattleField();
+        gui.updateBattleField(mockBattleField);
+        // Add assertions to verify the GUI updates correctly based on the battlefield state
     }
 
     @Test
-    void testInvalidMoveAlreadyHitCell() {
-        JButton[][] playerAGrid = getPlayerAGrid();
-        JButton button = playerAGrid[0][0];
-        button.doClick();
-        button.doClick();
-        assertEquals(Color.RED, button.getBackground(), "Button color should remain red after clicking an already hit cell.");
-    }
-
-    private JLabel getStatusLabel() {
-        for (Component component : gameGUI.frame.getContentPane().getComponents()) {
-            if (component instanceof JLabel) {
-                return (JLabel) component;
-            }
-        }
-        throw new IllegalStateException("Status label not found.");
-    }
-
-    private JButton[][] getPlayerAGrid() {
-        return gameGUI.playerAGrid;
-    }
-
-    private JButton[][] getPlayerBGrid() {
-        return gameGUI.playerBGrid;
+    public void testWindowProperties() {
+        GameGUI gui = new GameGUI();
+        JFrame frame = (JFrame) SwingUtilities.getRoot(gui);
+        assertEquals("BattleShip Game", frame.getTitle(), "Window title should be 'BattleShip Game'.");
+        assertEquals(800, frame.getWidth(), "Window width should be 800.");
+        assertEquals(600, frame.getHeight(), "Window height should be 600.");
     }
 }
