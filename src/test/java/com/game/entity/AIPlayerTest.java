@@ -1,29 +1,42 @@
 package com.game.entity;
 
-import com.game.strategy.FiringStrategy;
-import com.game.strategy.RandomFiringStrategy;
-import com.game.strategy.TargetedFiringStrategy;
+import com.game.strategy.PredictiveFiringStrategy;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class AIPlayerTest {
+/**
+ * Unit tests for AIPlayer.
+ */
+class AIPlayerTest {
 
-    @Test
-    public void testAIPlayerInitialization() {
-        FiringStrategy strategy = new RandomFiringStrategy();
-        AIPlayer aiPlayer = new AIPlayer("AI_Test", strategy);
+    private AIPlayer aiPlayer;
+    private BattleField mockBattleField;
 
-        assertNotNull(aiPlayer);
-        assertEquals("AI_Test", aiPlayer.getName());
-        assertEquals(strategy, aiPlayer.getFiringStrategy());
+    @BeforeEach
+    void setUp() {
+        mockBattleField = new BattleField(10); // 10x10 grid
+        aiPlayer = new AIPlayer("AI", mockBattleField);
     }
 
     @Test
-    public void testAIPlayerWithTargetedFiringStrategy() {
-        FiringStrategy strategy = new TargetedFiringStrategy();
-        AIPlayer aiPlayer = new AIPlayer("AI_Hard", strategy);
+    void testDefaultFiringStrategy() {
+        assertTrue(aiPlayer.getFiringStrategy() instanceof PredictiveFiringStrategy);
+    }
 
-        assertTrue(aiPlayer.getFiringStrategy() instanceof TargetedFiringStrategy);
+    @Test
+    void testSetCustomFiringStrategy() {
+        FiringStrategy customStrategy = new RandomFiringStrategy();
+        aiPlayer.setFiringStrategy(customStrategy);
+        assertEquals(customStrategy, aiPlayer.getFiringStrategy());
+    }
+
+    @Test
+    void testGetNextTargetUsingPredictiveStrategy() {
+        aiPlayer.getPreviousHits().add(new CoordinatePair(5, 5));
+        CoordinatePair target = aiPlayer.getNextTarget();
+        assertNotNull(target);
+        assertTrue(mockBattleField.isValidCoordinate(target));
     }
 }
