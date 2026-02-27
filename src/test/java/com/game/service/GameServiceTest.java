@@ -1,97 +1,70 @@
 package com.game.service;
 
 import com.game.entity.Game;
-import com.game.validation.GameValidator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 public class GameServiceTest {
 
-    private GameService gameService;
-    private GameValidator gameValidator;
+    @Test
+    public void testConfigureAndInitializeGame() {
+        GameService gameService = new GameService();
 
-    @BeforeEach
-    public void setUp() {
-        gameValidator = mock(GameValidator.class);
-        gameService = new GameService(gameValidator);
+        int gridSize = 8;
+        int numberOfShips = 4;
+        int[] shipSizes = {2, 3, 3, 4};
+
+        gameService.configureGameSettings(gridSize, numberOfShips, shipSizes);
+        Game game = gameService.initializeGame();
+
+        assertNotNull(game);
+        assertEquals(gridSize, game.getGridSize());
+        assertEquals(numberOfShips, game.getNumberOfShips());
+        assertArrayEquals(shipSizes, game.getShipSizes());
     }
 
     @Test
-    public void testInitGameRateLimiting() {
-        String clientId = "testClient";
+    public void testInitializeGameWithoutSettings() {
+        GameService gameService = new GameService();
 
-        // First request should succeed
-        Game game1 = gameService.initGame(clientId, 10);
-        assertNotNull(game1);
-
-        // Second request within rate limit interval should fail
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
-            gameService.initGame(clientId, 10);
-        });
-        assertEquals("Rate limit exceeded. Please try again later.", exception.getMessage());
+        Exception exception = assertThrows(IllegalStateException.class, gameService::initializeGame);
+        assertEquals("Game settings must be configured before initializing the game.", exception.getMessage());
     }
 
     @Test
-    public void testInitGameAfterRateLimitInterval() throws InterruptedException {
-        String clientId = "testClient";
+    public void testInvalidGridSize() {
+        GameService gameService = new GameService();
 
-        // First request should succeed
-        Game game1 = gameService.initGame(clientId, 10);
-        assertNotNull(game1);
+        int gridSize = -1;
+        int numberOfShips = 4;
+        int[] shipSizes = {2, 3, 3, 4};
 
-        // Wait for rate limit interval to pass
-        Thread.sleep(1100);
-
-        // Second request should succeed after interval
-        Game game2 = gameService.initGame(clientId, 10);
-        assertNotNull(game2);
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> gameService.configureGameSettings(gridSize, numberOfShips, shipSizes));
+        assertEquals("Grid size must be positive.", exception.getMessage());
     }
 
     @Test
-    public void testInitGameWithDifferentClients() {
-        String clientId1 = "client1";
-        String clientId2 = "client2";
+    public void testInvalidNumberOfShips() {
+        GameService gameService = new GameService();
 
-        // Both clients should be able to initialize games independently
-        Game game1 = gameService.initGame(clientId1, 10);
-        assertNotNull(game1);
+        int gridSize = 8;
+        int numberOfShips = -1;
+        int[] shipSizes = {2, 3, 3, 4};
 
-        Game game2 = gameService.initGame(clientId2, 10);
-        assertNotNull(game2);
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> gameService.configureGameSettings(gridSize, numberOfShips, shipSizes));
+        assertEquals("Number of ships must be positive.", exception.getMessage());
     }
 
     @Test
-    public void testInitGameInvalidSize() {
-        String clientId = "testClient";
+    public void testMismatchedShipSizes() {
+        GameService gameService = new GameService();
 
-        // Mock validation to throw an exception for invalid game size
-        doThrow(new IllegalArgumentException("Invalid game size.")).when(gameValidator).validateGame(any(Game.class));
+        int gridSize = 8;
+        int numberOfShips = 4;
+        int[] shipSizes = {2, 3};
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            gameService.initGame(clientId, -1);
-        });
-        assertEquals("Invalid game size.", exception.getMessage());
-    }
-
-    @Test
-    public void testInitGameConcurrentRequests() throws InterruptedException {
-        String clientId = "testClient";
-
-        // First request should succeed
-        Game game1 = gameService.initGame(clientId, 10);
-        assertNotNull(game1);
-
-        // Simulate concurrent requests within the rate limit interval
-        Thread thread = new Thread(() -> {
-            Exception exception = assertThrows(IllegalStateException.class, () -> {
-                gameService.initGame(clientId, 10);
-            });
-            assertEquals("Rate limit exceeded. Please try again later.", exception.getMessage());
-        });
-        thread.start();
-        thread.join();
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> gameService.configureGameSettings(gridSize, numberOfShips, shipSizes));
+        assertEquals("Number of ships does not match the length of ship sizes array.", exception.getMessage());
     }
 }

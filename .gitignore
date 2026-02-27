@@ -1,11 +1,4 @@
-*.class
-*.log
-*.jar
-*.war
-*.ear
-*.iml
-.gradle
-build/
-out/
-!gradle/wrapper/gradle-wrapper.jar
-application.properties
+...
+# Ignore sensitive configuration files
+*.properties
+*.xml

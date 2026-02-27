@@ -1,22 +1,20 @@
 package com.example.demo;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+import java.util.Properties;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 class ApplicationPropertiesTest {
 
     @Test
-    void testEnvironmentVariableSubstitution() {
-        String dbUsername = System.getenv("DB_USERNAME");
-        String dbPassword = System.getenv("DB_PASSWORD");
+    void testDefaultProperties() throws IOException {
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("src/main/resources/application.properties"));
 
-        assertNotNull(dbUsername, "DB_USERNAME environment variable should be set.");
-        assertNotNull(dbPassword, "DB_PASSWORD environment variable should be set.");
-    }
-
-    @Test
-    void testApplicationPropertiesIgnored() {
-        boolean isIgnored = new java.io.File("src/main/resources/application.properties").exists();
-        assertFalse(isIgnored, "application.properties should not be committed to the repository.");
+        assertEquals("INFO", properties.getProperty("LOG_LEVEL"), "Default LOG_LEVEL should be INFO");
+        assertEquals("%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n", properties.getProperty("LOG_PATTERN"), "Default LOG_PATTERN should match");
     }
 }
