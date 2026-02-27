@@ -10,7 +10,9 @@ class ReadmeSecurityTest {
     @Test
     void testReadmeContainsSecurityBestPractices() throws Exception {
         String readmeContent = Files.readString(Paths.get("README.md"));
-        assertTrue(readmeContent.contains("Environment Variables"), "README.md should include guidance on using environment variables.");
-        assertTrue(readmeContent.contains("Secrets Management"), "README.md should include guidance on using secrets management tools.");
+
+        assertTrue(readmeContent.contains("Environment Variables"), "README should mention environment variables for managing secrets");
+        assertTrue(readmeContent.contains("Secrets Management"), "README should mention secrets management tools");
+        assertTrue(readmeContent.contains("Git Ignore"), "README should mention adding sensitive files to .gitignore");
     }
 }

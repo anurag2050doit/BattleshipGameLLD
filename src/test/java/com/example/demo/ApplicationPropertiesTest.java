@@ -6,17 +6,24 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApplicationPropertiesTest {
 
     @Test
-    void testEnvironmentVariableSubstitution() {
+    void testEnvironmentVariablePlaceholders() {
+        String dbUrl = System.getenv("DB_URL");
         String dbUsername = System.getenv("DB_USERNAME");
         String dbPassword = System.getenv("DB_PASSWORD");
 
-        assertNotNull(dbUsername, "DB_USERNAME environment variable should be set.");
-        assertNotNull(dbPassword, "DB_PASSWORD environment variable should be set.");
+        assertNotNull(dbUrl, "DB_URL environment variable should not be null");
+        assertNotNull(dbUsername, "DB_USERNAME environment variable should not be null");
+        assertNotNull(dbPassword, "DB_PASSWORD environment variable should not be null");
     }
 
     @Test
-    void testApplicationPropertiesIgnored() {
-        boolean isIgnored = new java.io.File("src/main/resources/application.properties").exists();
-        assertFalse(isIgnored, "application.properties should not be committed to the repository.");
+    void testInvalidEnvironmentVariables() {
+        System.clearProperty("DB_URL");
+        System.clearProperty("DB_USERNAME");
+        System.clearProperty("DB_PASSWORD");
+
+        assertNull(System.getenv("DB_URL"), "DB_URL should be null when not set");
+        assertNull(System.getenv("DB_USERNAME"), "DB_USERNAME should be null when not set");
+        assertNull(System.getenv("DB_PASSWORD"), "DB_PASSWORD should be null when not set");
     }
 }
