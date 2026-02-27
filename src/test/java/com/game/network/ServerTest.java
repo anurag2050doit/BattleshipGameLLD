@@ -1,84 +1,86 @@
 package com.game.network;
 
-import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.*;
 import java.io.*;
-import java.net.Socket;
-
+import java.net.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ServerTest {
+    private Server server;
+    private Thread serverThread;
 
-    @Test
-    void testServerClientCommunication() throws IOException {
-        Thread serverThread = new Thread(() -> {
-            try {
-                new Server().start();
-            } catch (IOException e) {
-                fail("Server failed to start: " + e.getMessage());
-            }
-        });
+    @BeforeEach
+    void setUp() {
+        server = new Server();
+        serverThread = new Thread(server::start);
         serverThread.start();
+    }
 
-        try (Socket clientSocket = new Socket("localhost", 12345);
-             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
-            out.println("Test Message");
-            String response = in.readLine();
-            assertNotNull(response);
-            assertTrue(response.contains("Echo"));
+    @AfterEach
+    void tearDown() {
+        server.stop();
+        try {
+            serverThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
     @Test
-    void testServerHandlesMultipleClients() throws IOException {
-        Thread serverThread = new Thread(() -> {
-            try {
-                new Server().start();
+    void testServerClientCommunication() throws IOException {
+        try (Socket clientSocket = new Socket("localhost", 8080);
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+
+            out.println("Hello Server");
+            String response = in.readLine();
+            assertEquals("Echo: Hello Server", response);
+        }
+    }
+
+    @Test
+    void testServerHandlesMultipleClients() throws IOException, InterruptedException {
+        Thread client1 = new Thread(() -> {
+            try (Socket clientSocket = new Socket("localhost", 8080);
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+
+                out.println("Client1 Message");
+                String response = in.readLine();
+                assertEquals("Echo: Client1 Message", response);
             } catch (IOException e) {
-                fail("Server failed to start: " + e.getMessage());
+                fail("Client1 failed: " + e.getMessage());
             }
         });
-        serverThread.start();
 
-        try (Socket client1 = new Socket("localhost", 12345);
-             Socket client2 = new Socket("localhost", 12345);
-             BufferedReader in1 = new BufferedReader(new InputStreamReader(client1.getInputStream()));
-             PrintWriter out1 = new PrintWriter(client1.getOutputStream(), true);
-             BufferedReader in2 = new BufferedReader(new InputStreamReader(client2.getInputStream()));
-             PrintWriter out2 = new PrintWriter(client2.getOutputStream(), true)) {
+        Thread client2 = new Thread(() -> {
+            try (Socket clientSocket = new Socket("localhost", 8080);
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-            out1.println("Client1 Message");
-            out2.println("Client2 Message");
+                out.println("Client2 Message");
+                String response = in.readLine();
+                assertEquals("Echo: Client2 Message", response);
+            } catch (IOException e) {
+                fail("Client2 failed: " + e.getMessage());
+            }
+        });
 
-            String response1 = in1.readLine();
-            String response2 = in2.readLine();
+        client1.start();
+        client2.start();
 
-            assertNotNull(response1);
-            assertNotNull(response2);
-            assertTrue(response1.contains("Echo"));
-            assertTrue(response2.contains("Echo"));
-        }
+        client1.join();
+        client2.join();
     }
 
     @Test
     void testServerHandlesClientDisconnection() throws IOException {
-        Thread serverThread = new Thread(() -> {
-            try {
-                new Server().start();
-            } catch (IOException e) {
-                fail("Server failed to start: " + e.getMessage());
-            }
-        });
-        serverThread.start();
+        try (Socket clientSocket = new Socket("localhost", 8080);
+             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
 
-        try (Socket clientSocket = new Socket("localhost", 12345);
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
-            out.println("Disconnect Test");
+            out.println("Disconnecting Client");
             clientSocket.close();
-
             assertTrue(clientSocket.isClosed());
         }
     }

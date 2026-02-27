@@ -1,11 +1,2 @@
-*.class
-*.log
-*.jar
-*.war
-*.ear
-*.iml
-.gradle
-build/
-out/
-!gradle/wrapper/gradle-wrapper.jar
-application.properties
+*.properties
+*.secrets

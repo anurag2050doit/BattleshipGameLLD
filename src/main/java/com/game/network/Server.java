@@ -3,63 +3,73 @@ package com.game.network;
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Server {
-    private static final int PORT = 12345;
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final int PORT = 8080;
     private ServerSocket serverSocket;
-    private ExecutorService clientPool;
+    private ExecutorService clientHandlerPool;
 
-    public Server() throws IOException {
-        serverSocket = new ServerSocket(PORT);
-        clientPool = Executors.newFixedThreadPool(10);
+    public Server() {
+        clientHandlerPool = Executors.newFixedThreadPool(10);
     }
 
     public void start() {
-        System.out.println("Server started on port " + PORT);
-        while (true) {
-            try {
-                Socket clientSocket = serverSocket.accept();
-                clientPool.execute(new ClientHandler(clientSocket));
-            } catch (IOException e) {
-                System.err.println("Error accepting client connection: " + e.getMessage());
-            }
-        }
-    }
-
-    public static void main(String[] args) {
         try {
-            new Server().start();
-        } catch (IOException e) {
-            System.err.println("Failed to start server: " + e.getMessage());
-        }
-    }
-}
+            serverSocket = new ServerSocket(PORT);
+            logger.info("Server started on port {}", PORT);
 
-class ClientHandler implements Runnable {
-    private Socket clientSocket;
-
-    public ClientHandler(Socket clientSocket) {
-        this.clientSocket = clientSocket;
-    }
-
-    @Override
-    public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
-            out.println("Welcome to the Battleship game server!");
-            String input;
-            while ((input = in.readLine()) != null) {
-                System.out.println("Received: " + input);
-                out.println("Echo: " + input);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                logger.info("New client connected: {}", clientSocket.getInetAddress());
+                clientHandlerPool.execute(new ClientHandler(clientSocket));
             }
         } catch (IOException e) {
-            System.err.println("Client connection error: " + e.getMessage());
+            logger.error("Error starting server: {}", e.getMessage());
         } finally {
-            try {
-                clientSocket.close();
+            stop();
+        }
+    }
+
+    public void stop() {
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+            clientHandlerPool.shutdown();
+            logger.info("Server stopped.");
+        } catch (IOException e) {
+            logger.error("Error stopping server: {}", e.getMessage());
+        }
+    }
+
+    private static class ClientHandler implements Runnable {
+        private Socket clientSocket;
+
+        public ClientHandler(Socket clientSocket) {
+            this.clientSocket = clientSocket;
+        }
+
+        @Override
+        public void run() {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    logger.info("Received: {}", inputLine);
+                    out.println("Echo: " + inputLine);
+                }
             } catch (IOException e) {
-                System.err.println("Error closing client socket: " + e.getMessage());
+                logger.error("Error handling client: {}", e.getMessage());
+            } finally {
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                    logger.error("Error closing client socket: {}", e.getMessage());
+                }
             }
         }
     }
